@@ -1,0 +1,51 @@
+name: career_guidance_app
+description: "A new Flutter project."
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  animated_text_kit: ^4.2.2 
+  giphy_picker: ^2.0.0 
+  firebase_core: ^3.8.1
+  firebase_auth: ^5.3.4
+  shared_preferences: ^2.3.3
+  http: ^0.13.6
+  flutter_gemini: ^3.0.0
+  image_picker: ^1.1.2
+  dash_chat_2: ^0.0.21
+  url_launcher: ^6.3.1
+  fl_chart: ^0.69.2
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.2.0
+  audioplayers: ^6.1.0
+  
+  
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.9.2
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icon.png
+    - assets/alarm_sound.wav
+    

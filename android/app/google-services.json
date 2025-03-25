@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "105947681683",
+    "project_id": "career-guidance-app-98f12",
+    "storage_bucket": "career-guidance-app-98f12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105947681683:android:498e3a1d8099e7a7c80e66",
+        "android_client_info": {
+          "package_name": "com.example.career_guidance_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdqNKzu7k3AjwsrSDxDhLBKS0ofqXk7jY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
