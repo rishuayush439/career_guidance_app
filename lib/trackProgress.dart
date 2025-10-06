@@ -1,8 +1,299 @@
 
+// import 'package:flutter/material.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import 'dart:convert';
+// import 'package:fl_chart/fl_chart.dart';
+// import 'package:speech_to_text/speech_to_text.dart' as stt;
+
+// class TrackProgressPage extends StatefulWidget {
+//   const TrackProgressPage({Key? key}) : super(key: key);
+
+//   @override
+//   _TrackProgressPageState createState() => _TrackProgressPageState();
+// }
+
+// class _TrackProgressPageState extends State<TrackProgressPage> {
+//   List<Map<String, dynamic>> challenges = [];
+//   final TextEditingController taskController = TextEditingController();
+//   stt.SpeechToText? _speech; 
+//   bool _isListening = false;
+//   String _spokenText = "";
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     loadTasks();
+//   }
+
+//   Future<void> saveTasks() async {
+//     try {
+//       SharedPreferences prefs = await SharedPreferences.getInstance();
+//       String encodedData = jsonEncode(challenges);
+//       await prefs.setString('tasks', encodedData);
+//       debugPrint("Tasks saved successfully: $encodedData");
+//     } catch (e) {
+//       debugPrint("Error saving tasks: $e");
+//     }
+//   }
+
+//   Future<void> loadTasks() async {
+//     try {
+//       SharedPreferences prefs = await SharedPreferences.getInstance();
+//       String? data = prefs.getString('tasks');
+//       if (data != null) {
+//         setState(() {
+//           challenges = List<Map<String, dynamic>>.from(jsonDecode(data));
+//         });
+//         debugPrint("Tasks loaded successfully: $data");
+//       } else {
+//         debugPrint("No tasks found in local storage.");
+//       }
+//     } catch (e) {
+//       debugPrint("Error loading tasks: $e");
+//     }
+//   }
+
+//   void addTask(String title) {
+//     setState(() {
+//       challenges.add({'title': title, 'completed': false});
+//     });
+//     saveTasks();
+//   }
+
+//   void toggleCompletion(int index) {
+//     setState(() {
+//       challenges[index]['completed'] = !challenges[index]['completed'];
+//     });
+//     saveTasks();
+//   }
+
+//   void deleteTask(int index) {
+//     setState(() {
+//       challenges.removeAt(index);
+//     });
+//     saveTasks();
+//   }
+
+//   double get progress {
+//     int completedCount =
+//         challenges.where((challenge) => challenge['completed'] == true).length;
+//     return challenges.isEmpty ? 0.0 : completedCount / challenges.length;
+//   }
+
+//   List<BarChartGroupData> get barChartData {
+//     int completedCount =
+//         challenges.where((challenge) => challenge['completed'] == true).length;
+//     int remainingCount = challenges.length - completedCount;
+
+//     return [
+//       BarChartGroupData(
+//         x: 0,
+//         barRods: [
+//           BarChartRodData(
+//             fromY: 0, // Starting point of the bar
+//             toY: completedCount
+//                 .toDouble(), // Ending point of the bar (height of the bar)
+//             color: Colors.green, // Color of the bar
+//           ),
+//         ],
+//       ),
+//       BarChartGroupData(
+//         x: 1,
+//         barRods: [
+//           BarChartRodData(
+//             fromY: 0, // Starting point of the bar
+//             toY: remainingCount
+//                 .toDouble(), // Ending point of the bar (height of the bar)
+//             color: Colors.red, // Color of the bar
+//           ),
+//         ],
+//       ),
+//     ];
+//   }
+
+//   void startListening() async {
+//     if (_speech == null) {
+//       _speech = stt.SpeechToText(); // Initialize only when needed
+//     }
+
+//     bool available = await _speech!.initialize();
+//     if (available) {
+//       setState(() {
+//         _isListening = true;
+//       });
+//       _speech!.listen(onResult: (result) {
+//         setState(() {
+//           _spokenText = result.recognizedWords;
+//         });
+//       });
+//     }
+//   }
+
+//   void stopListening() {
+//     _speech?.stop();
+//     setState(() {
+//       _isListening = false;
+//       if (_spokenText.isNotEmpty) {
+//         addTask(_spokenText);
+//         _spokenText = "";
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     double screenWidth = MediaQuery.of(context).size.width;
+//     double screenHeight = MediaQuery.of(context).size.height;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Track Your Progress'),
+//         backgroundColor: const Color.fromARGB(255, 107, 107, 210),
+//       ),
+//       body: Padding(
+//         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+//         child: SingleChildScrollView(
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               const SizedBox(height: 16),
+//               LinearProgressIndicator(
+//                 value: progress,
+//                 minHeight: 8,
+//                 backgroundColor: Colors.grey[300],
+//                 color: Colors.green,
+//               ),
+//               const SizedBox(height: 16),
+//               Text(
+//                 '${(progress * 100).toStringAsFixed(0)}% Completed',
+//                 style: const TextStyle(
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.green,
+//                 ),
+//               ),
+//               const SizedBox(height: 32),
+
+//               // Pie chart for task completion
+//               SizedBox(
+//                 height: 250,
+//                 child: PieChart(
+//                   PieChartData(
+//                     sections: [
+//                       PieChartSectionData(
+//                         value: progress * 100,
+//                         color: Colors.green,
+//                         title: '${(progress * 100).toStringAsFixed(0)}%',
+//                         radius: 50,
+//                       ),
+//                       PieChartSectionData(
+//                         value: (1 - progress) * 100,
+//                         color: Colors.red,
+//                         title: '${((1 - progress) * 100).toStringAsFixed(0)}%',
+//                         radius: 50,
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(height: 32),
+
+//               // Bar chart showing completed vs remaining tasks
+//               SizedBox(
+//                 height: 250,
+//                 child: BarChart(
+//                   BarChartData(
+//                     barGroups: barChartData,
+//                     borderData: FlBorderData(show: false),
+//                     titlesData: FlTitlesData(show: false),
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(height: 32),
+//               TextField(
+//                 controller: taskController,
+//                 decoration: const InputDecoration(
+//                   hintText: 'Add a new task...',
+//                   border: OutlineInputBorder(),
+//                 ),
+//               ),
+//               IconButton(
+//                 icon: const Icon(Icons.add),
+//                 onPressed: () {
+//                   if (taskController.text.isNotEmpty) {
+//                     addTask(taskController.text);
+//                     taskController.clear();
+//                   }
+//                 },
+//               ),
+
+//               // Speech-to-Text Button
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   IconButton(
+//                     icon: Icon(_isListening ? Icons.stop : Icons.mic),
+//                     onPressed: _isListening ? stopListening : startListening,
+//                   ),
+//                 ],
+//               ),
+
+//               SizedBox(
+//                 height: screenHeight * 0.4,
+//                 child: ListView.builder(
+//                   itemCount: challenges.length,
+//                   itemBuilder: (context, index) {
+//                     final challenge = challenges[index];
+//                     return Card(
+//                       elevation: 4,
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(10),
+//                       ),
+//                       child: Padding(
+//                         padding: const EdgeInsets.all(16.0),
+//                         child: Row(
+//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                           children: [
+//                             Text(
+//                               challenge['title'],
+//                               style:
+//                                   const TextStyle(fontWeight: FontWeight.bold),
+//                             ),
+//                             Row(
+//                               children: [
+//                                 Checkbox(
+//                                   value: challenge['completed'],
+//                                   onChanged: (value) {
+//                                     toggleCompletion(index);
+//                                   },
+//                                 ),
+//                                 IconButton(
+//                                   icon: const Icon(Icons.delete),
+//                                   onPressed: () {
+//                                     deleteTask(index);
+//                                   },
+//                                 ),
+//                               ],
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     );
+//                   },
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class TrackProgressPage extends StatefulWidget {
@@ -15,7 +306,7 @@ class TrackProgressPage extends StatefulWidget {
 class _TrackProgressPageState extends State<TrackProgressPage> {
   List<Map<String, dynamic>> challenges = [];
   final TextEditingController taskController = TextEditingController();
-  stt.SpeechToText? _speech; 
+  stt.SpeechToText? _speech;
   bool _isListening = false;
   String _spokenText = "";
 
@@ -80,40 +371,9 @@ class _TrackProgressPageState extends State<TrackProgressPage> {
     return challenges.isEmpty ? 0.0 : completedCount / challenges.length;
   }
 
-  List<BarChartGroupData> get barChartData {
-    int completedCount =
-        challenges.where((challenge) => challenge['completed'] == true).length;
-    int remainingCount = challenges.length - completedCount;
-
-    return [
-      BarChartGroupData(
-        x: 0,
-        barRods: [
-          BarChartRodData(
-            fromY: 0, // Starting point of the bar
-            toY: completedCount
-                .toDouble(), // Ending point of the bar (height of the bar)
-            color: Colors.green, // Color of the bar
-          ),
-        ],
-      ),
-      BarChartGroupData(
-        x: 1,
-        barRods: [
-          BarChartRodData(
-            fromY: 0, // Starting point of the bar
-            toY: remainingCount
-                .toDouble(), // Ending point of the bar (height of the bar)
-            color: Colors.red, // Color of the bar
-          ),
-        ],
-      ),
-    ];
-  }
-
   void startListening() async {
     if (_speech == null) {
-      _speech = stt.SpeechToText(); // Initialize only when needed
+      _speech = stt.SpeechToText();
     }
 
     bool available = await _speech!.initialize();
@@ -140,6 +400,178 @@ class _TrackProgressPageState extends State<TrackProgressPage> {
     });
   }
 
+  // Custom progress indicator widget
+  Widget _buildCustomProgressChart() {
+    int completedCount =
+        challenges.where((challenge) => challenge['completed'] == true).length;
+    int remainingCount = challenges.length - completedCount;
+
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // Progress bars
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Completed',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: completedCount * 10.0 + 20,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$completedCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Remaining',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        height: remainingCount * 10.0 + 20,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$remainingCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Legend
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildLegendItem(Colors.green, 'Completed: $completedCount'),
+              _buildLegendItem(Colors.red, 'Remaining: $remainingCount'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String text) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  // Custom circular progress indicator
+  Widget _buildCircularProgress() {
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.grey[300]!, width: 8),
+            ),
+          ),
+          // Progress circle
+          SizedBox(
+            width: 150,
+            height: 150,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 8,
+              backgroundColor: Colors.grey[300],
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+          // Percentage text
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${(progress * 100).toStringAsFixed(0)}%',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+              Text(
+                'Completed',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -157,6 +589,8 @@ class _TrackProgressPageState extends State<TrackProgressPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
+
+              // Progress indicator
               LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
@@ -173,114 +607,146 @@ class _TrackProgressPageState extends State<TrackProgressPage> {
               ),
               const SizedBox(height: 32),
 
-              // Pie chart for task completion
-              SizedBox(
-                height: 250,
-                child: PieChart(
-                  PieChartData(
-                    sections: [
-                      PieChartSectionData(
-                        value: progress * 100,
-                        color: Colors.green,
-                        title: '${(progress * 100).toStringAsFixed(0)}%',
-                        radius: 50,
-                      ),
-                      PieChartSectionData(
-                        value: (1 - progress) * 100,
-                        color: Colors.red,
-                        title: '${((1 - progress) * 100).toStringAsFixed(0)}%',
-                        radius: 50,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Circular progress chart
+              _buildCircularProgress(),
               const SizedBox(height: 32),
 
-              // Bar chart showing completed vs remaining tasks
-              SizedBox(
-                height: 250,
-                child: BarChart(
-                  BarChartData(
-                    barGroups: barChartData,
-                    borderData: FlBorderData(show: false),
-                    titlesData: FlTitlesData(show: false),
-                  ),
+              // Bar chart replacement
+              _buildCustomProgressChart(),
+              const SizedBox(height: 32),
+
+              // Add task section
+              const Text(
+                'Add New Task:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
               TextField(
                 controller: taskController,
                 decoration: const InputDecoration(
-                  hintText: 'Add a new task...',
+                  hintText: 'Enter a new task...',
                   border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blue),
+                  ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  if (taskController.text.isNotEmpty) {
-                    addTask(taskController.text);
-                    taskController.clear();
-                  }
-                },
-              ),
+              const SizedBox(height: 16),
 
-              // Speech-to-Text Button
+              // Buttons row
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: Icon(_isListening ? Icons.stop : Icons.mic),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (taskController.text.isNotEmpty) {
+                          addTask(taskController.text);
+                          taskController.clear();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Add Task'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
                     onPressed: _isListening ? stopListening : startListening,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isListening ? Colors.red : Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_isListening ? Icons.stop : Icons.mic),
+                        const SizedBox(width: 8),
+                        Text(_isListening ? 'Stop' : 'Voice'),
+                      ],
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 32),
 
-              SizedBox(
-                height: screenHeight * 0.4,
-                child: ListView.builder(
-                  itemCount: challenges.length,
-                  itemBuilder: (context, index) {
-                    final challenge = challenges[index];
-                    return Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              challenge['title'],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: challenge['completed'],
-                                  onChanged: (value) {
-                                    toggleCompletion(index);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () {
-                                    deleteTask(index);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+              // Tasks list
+              const Text(
+                'Your Tasks:',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 16),
+
+              if (challenges.isEmpty)
+                const Center(
+                  child: Text(
+                    'No tasks yet. Add some tasks to track your progress!',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: screenHeight * 0.4,
+                  child: ListView.builder(
+                    itemCount: challenges.length,
+                    itemBuilder: (context, index) {
+                      final challenge = challenges[index];
+                      return Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          title: Text(
+                            challenge['title'],
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              decoration: challenge['completed']
+                                  ? TextDecoration.lineThrough
+                                  : TextDecoration.none,
+                              color: challenge['completed']
+                                  ? Colors.grey
+                                  : Colors.black,
+                            ),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Checkbox(
+                                value: challenge['completed'],
+                                onChanged: (value) {
+                                  toggleCompletion(index);
+                                },
+                              ),
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  deleteTask(index);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),

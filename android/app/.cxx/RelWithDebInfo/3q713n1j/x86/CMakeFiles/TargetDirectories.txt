@@ -1,0 +1,2 @@
+D:/App/career_guidance_app/android/app/.cxx/RelWithDebInfo/3q713n1j/x86/CMakeFiles/edit_cache.dir
+D:/App/career_guidance_app/android/app/.cxx/RelWithDebInfo/3q713n1j/x86/CMakeFiles/rebuild_cache.dir
